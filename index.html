@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A to Z Smart Dictionary</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Merriweather', 'serif'] }
+                }
+            }
+        }
+    </script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Vis.js for Network Graph -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans">
+
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-orange-600 p-2 rounded-xl text-white shadow-lg shadow-orange-600/20">
+                    <i data-lucide="library" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight"><span class="text-orange-600">सनातन संग्रहालय</span></h1>
+            </div>
+            
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <button id="btn-mode-search" onclick="switchMode('search')" class="mode-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><i data-lucide="search" class="w-4 h-4"></i> Search</button>
+                <button id="btn-mode-reader" onclick="switchMode('reader')" class="mode-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4"></i> Reader</button>
+                <button id="btn-mode-map" onclick="switchMode('map')" class="mode-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><i data-lucide="network" class="w-4 h-4"></i> Map</button>
+                <button id="btn-mode-chat" onclick="switchMode('chat')" class="mode-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><i data-lucide="message-square" class="w-4 h-4"></i> Andy</button>
+                <button id="btn-mode-offline" onclick="switchMode('offline')" class="mode-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><i data-lucide="wifi-off" class="w-4 h-4"></i> Saved</button>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <select id="language-selector" class="bg-slate-900 text-white text-sm font-medium focus:outline-none cursor-pointer rounded-lg px-2 py-1">
+                    <option value="English">English</option>
+                    {% for cat, langs in languages.items() %}
+                    <optgroup label="{{ cat }}">
+                        {% for lang in langs %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+                <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <select id="accent-selector" onchange="updateAccent()" class="bg-slate-900 text-white text-sm font-medium focus:outline-none cursor-pointer max-w-[100px] rounded-lg px-2 py-1">
+                    <option value="en-US">US</option>
+                    <option value="en-GB">UK</option>
+                    <option value="en-IN">Indian</option>
+                    <option value="en-AU">Aus</option>
+                </select>
+                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl mx-auto w-full p-6 relative">
+        
+        <!-- View: Search -->
+        <section id="view-search" class="view-section space-y-8 animate-in">
+            <div class="max-w-3xl mx-auto text-center space-y-6 pt-10">
+                <h2 class="text-4xl font-extrabold text-slate-900 dark:text-white sm:text-5xl">Explore the <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Universe</span> of Words</h2>
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-orange-500 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <div class="relative flex items-center bg-white dark:bg-slate-900 rounded-xl shadow-2xl overflow-hidden p-2 ring-1 ring-slate-900/5">
+                        <input type="text" id="search-input" placeholder="Enter word(s) e.g. 'sun, moon'..." class="flex-1 bg-transparent border-none focus:ring-0 text-lg px-4 py-3 placeholder:text-slate-400" onkeypress="if(event.key === 'Enter') handleSearch()">
+                        <div class="flex items-center gap-1 pr-2">
+                            <button id="clear-search-btn" class="p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors hidden" onclick="document.getElementById('search-input').value = ''; this.style.display = 'none'; document.getElementById('search-input').focus();"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            <button id="mic-btn" onclick="toggleVoiceSearch()" class="p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"><i data-lucide="mic" class="w-5 h-5"></i></button>
+                            <button onclick="handleSearch()" class="bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-lg transition-colors shadow-lg shadow-orange-600/20"><i data-lucide="search" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading-indicator" class="hidden py-20 text-center">
+                <div class="inline-block relative">
+                    <i data-lucide="loader-2" class="w-12 h-12 text-orange-600 animate-spin"></i>
+                    <div class="absolute inset-0 bg-orange-600/20 blur-xl rounded-full"></div>
+                </div>
+                <p class="mt-4 text-slate-500 font-medium animate-pulse">Loading...</p>
+            </div>
+
+            <div id="results-tabs" class="hidden border-b border-slate-200 dark:border-slate-800 mb-6">
+                <div class="flex gap-4 overflow-x-auto" id="tabs-container"></div>
+            </div>
+
+            <div id="search-results" class="hidden animate-in"></div>
+        </section>
+
+        <!-- View: Reader -->
+        <section id="view-reader" class="view-section hidden h-[calc(100vh-8rem)]">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                <div class="flex flex-col h-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900">
+                        <h3 class="font-bold flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4 text-orange-500"></i> Reader Input</h3>
+                        <div class="flex gap-2">
+                            <button onclick="speakReaderText()" class="p-2 hover:bg-orange-100 dark:hover:bg-slate-800 rounded text-orange-600"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                            <!-- NEW: Grammar Check Button -->
+                            <button onclick="fixGrammar()" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3 h-3"></i> Fix Grammar</button>
+                            <button id="reader-mode-btn" onclick="toggleReaderMode()" class="px-3 py-1.5 bg-slate-900 dark:bg-slate-700 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors">Read Mode</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative">
+                        <textarea id="reader-input" class="w-full h-full p-6 resize-none focus:outline-none bg-transparent text-lg leading-relaxed dark:text-slate-200" placeholder="Paste text here to analyze, translate, or read..."></textarea>
+                        <div id="reader-display" class="w-full h-full p-6 hidden overflow-y-auto text-lg leading-relaxed dark:text-slate-200"></div>
+                    </div>
+                </div>
+                
+                <div id="reader-definition-card" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6 border border-slate-200 dark:border-slate-800 h-full overflow-hidden flex flex-col">
+                    <div class="text-center mt-10">
+                        <i data-lucide="book-open-text" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i>
+                        <p class="text-slate-400 text-sm mb-4">Click any word to define.</p>
+                        <button onclick="analyzeReaderParagraph()" class="px-4 py-2 bg-orange-100 dark:bg-slate-800 text-orange-700 dark:text-orange-400 rounded-lg text-sm font-bold hover:bg-orange-200 transition-colors">Analyze Paragraph</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Map -->
+        <section id="view-map" class="view-section hidden h-[calc(100vh-8rem)]">
+            <div class="h-full bg-slate-900 rounded-3xl overflow-hidden shadow-2xl relative border border-slate-800">
+                <div id="concept-network" class="w-full h-full"></div>
+                <div id="map-placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="text-center text-slate-500">
+                        <i data-lucide="network" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+                        <p>Search for a word to generate its concept map.</p>
+                    </div>
+                </div>
+                <div class="absolute bottom-6 right-6 bg-slate-800/90 backdrop-blur p-4 rounded-xl border border-slate-700 text-xs text-slate-300">
+                    <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-orange-500"></span> Main Word</div>
+                    <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Synonym</div>
+                    <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> Antonym</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Chat (Andy) -->
+        <section id="view-chat" class="view-section hidden h-[calc(100vh-8rem)]">
+            <div class="max-w-2xl mx-auto h-full flex flex-col">
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide" id="chat-history">
+                    <div class="flex justify-start gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-orange-100 dark:bg-slate-800 flex items-center justify-center text-orange-600 shrink-0 border border-orange-200 dark:border-slate-700">
+                            <i data-lucide="ghost" class="w-5 h-5"></i>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none border border-slate-100 dark:border-slate-700 dark:text-slate-200 shadow-sm text-lg leading-relaxed">
+                            Hi! I'm Andy. Ask me anything about words, idioms, or languages!
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <form onsubmit="handleChat(event)" class="relative">
+                        <input type="text" id="chat-input" placeholder="Ask Andy..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl pl-5 pr-12 py-4 shadow-xl focus:ring-2 focus:ring-orange-500 focus:outline-none dark:text-white">
+                        <button type="submit" class="absolute right-2 top-2 p-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-colors">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Offline -->
+        <section id="view-offline" class="view-section hidden animate-in">
+            <h2 class="text-3xl font-bold mb-8 dark:text-white">Saved Words</h2>
+            <div id="offline-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- Floating Action Button for Daily Word -->
+        <button onclick="handleWotd()" class="fixed bottom-6 right-6 bg-gradient-to-r from-pink-500 to-rose-500 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50 flex items-center gap-2 group">
+            <i data-lucide="sparkles" class="w-6 h-6 animate-pulse"></i>
+            <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap font-bold text-sm">Daily Word</span>
+        </button>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

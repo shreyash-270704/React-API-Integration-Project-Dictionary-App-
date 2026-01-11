@@ -1,0 +1,22 @@
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+.dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: fadeIn 0.4s ease-out forwards; }
+.reader-word { cursor: pointer; border-radius: 2px; transition: all 0.2s; }
+.reader-word:hover { background-color: #ffedd5; color: #c2410c; }
+.dark .reader-word:hover { background-color: #7c2d12; color: #ffedd5; }
+.interactive-text span { cursor: pointer; border-bottom: 1px dotted #ea580c; transition: all 0.2s; }
+.interactive-text span:hover { background-color: #ffedd5; color: #c2410c; }
+.dark .interactive-text span:hover { background-color: #7c2d12; color: #ffedd5; }
+.tab-btn.active { background-color: #ea580c; color: white; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.3); }
+.mode-btn.active { background-color: #fff; color: #ea580c; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); }
+.dark .mode-btn.active { background-color: #334155; color: #fb923c; }
+#concept-network { outline: none; }
+.translation-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #e2e8f0; }
+.dark .translation-section { border-top-color: #334155; }
+.translated-sentence { font-style: italic; color: #4b5563; }
+.dark .translated-sentence { color: #9ca3af; }
