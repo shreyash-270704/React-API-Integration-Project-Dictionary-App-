@@ -1,0 +1,17 @@
+Flask
+render_template
+request
+jsonify
+Response
+requests
+json
+OpenAI
+re
+asyncio
+edge_tts
+langid
+gTTS
+io
+random
+os
+load_dotenv
