@@ -5,13 +5,7 @@ edge-tts
 langid
 gtts
 python-dotenv
-
-Optional dependencies (handle gracefully in code but good to list)
-
 pydub
 SpeechRecognition
 wordfreq
-
-Production server
-
 gunicorn
