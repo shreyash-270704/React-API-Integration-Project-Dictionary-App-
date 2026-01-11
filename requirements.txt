@@ -1,7 +1,17 @@
-Flask
+flask
 requests
 openai
 edge-tts
 langid
-gTTS
+gtts
 python-dotenv
+
+Optional dependencies (handle gracefully in code but good to list)
+
+pydub
+SpeechRecognition
+wordfreq
+
+Production server
+
+gunicorn
