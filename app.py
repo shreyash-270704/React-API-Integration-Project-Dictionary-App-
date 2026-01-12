@@ -44,7 +44,22 @@ PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # Initialize OpenAI client only if key is available
-client = OpenAI(api_key=OPEN_FM_API_KEY) if OPEN_FM_API_KEY else None
+# Modified to use OPENAI_API_KEY specifically as requested
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    # We can't return jsonify here as we are in global scope, 
+    # but we can print a warning or choose not to init the client.
+    # The user request asks to return JSON error 500, which implies this check
+    # should happen inside a route or we handle it gracefully here.
+    # However, to strictly follow the "replace code" instruction pattern
+    # I will add this check to the routes where 'client' is used, or simply init it here.
+    # But since the user provided a snippet with 'return jsonify...', 
+    # it strongly implies this logic belongs inside a request handler.
+    # I will adapt by checking it here for init and ensuring routes handle 'client' being None.
+    client = None
+    print("Warning: OPENAI_API_KEY not found in environment variables.")
+else:
+    client = OpenAI(api_key=openai_api_key)
 
 # --- EDGE TTS VOICE MAPPING (ISO CODES) ---
 EDGE_TTS_VOICES = {
@@ -303,8 +318,9 @@ def generate_chat_html(role, text):
 
 # --- API ENDPOINTS ---
 
-@app.route('/api/dictionary', methods=['POST'])
-def dictionary_lookup():
+@app.route('/api/search', methods=['POST'])
+def search():
+    # Original /api/dictionary logic moved here
     data = request.json
     term = data.get('term')
     language = data.get('language')
@@ -365,7 +381,7 @@ def dictionary_lookup():
             
         return jsonify({"results": results_with_html})
     except Exception as e: 
-        print(f"Dictionary Lookup Error: {e}")
+        print(f"Search Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/chat', methods=['POST'])
@@ -426,6 +442,16 @@ def format_reader_text():
 
 @app.route('/api/tts', methods=['POST'])
 def text_to_speech():
+    # Check for API Key at the start of the route logic if client is needed
+    if not client:
+         # Use the exact logic requested by user if client is missing
+         key = os.getenv("OPENAI_API_KEY")
+         if not key:
+             return jsonify({"error": "API key missing"}), 500
+         # If key exists now but client wasn't init (edge case), try init
+         global client
+         client = OpenAI(api_key=key)
+
     data = request.json
     # Handle both 'text' and 'word' keys to fix audibility issues
     text = data.get('text') or data.get('word', '')
@@ -513,6 +539,13 @@ def word_of_the_day():
     # We reuse dictionary lookup logic
     language = request.args.get('language', 'English')
     theme = request.args.get('theme', 'light')
+    
+    # Create a mock request object to reuse the search function logic
+    # Note: In a cleaner refactor, the logic inside search() would be in a separate function
+    # But for this single-file constraint, we'll just call the search endpoint internally or duplicate logic
+    # To keep it simple and robust, let's just duplicate the minimal logic needed or call it if possible.
+    # Actually, calling the route function directly requires a Flask test context usually.
+    # So I will replicate the core logic here for safety.
     
     system_instruction = f"""Act as a smart dictionary backend. Target Language: "{language}". Analyze Input. 
     If the input contains multiple words (comma separated or list), return an array of result objects for each word.
