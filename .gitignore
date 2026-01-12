@@ -24,4 +24,4 @@ coverage.xml
 .git
 .mypy_cache
 .pytest_cache
-.hypotheses
+.hypothesis/
