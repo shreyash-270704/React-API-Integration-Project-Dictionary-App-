@@ -79,7 +79,7 @@ function translateUI(langCode) {
     const setHtml = (id, html) => { const el = getEl(id); if(el && html) el.innerHTML = html; };
     const setText = (id, text) => { const el = getEl(id); if(el && text) el.innerText = text; };
     
-    const defaults = { search: 'Search', reader: 'Reader', map: 'Map', chat: 'Andy', saved: 'Saved', wotd: 'Daily Word', exploreTitle: 'Explore the <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Universe</span> of Words', savedWordsTitle: 'Saved Words', readerInputTitle: 'Reader Input', readerModeBtn: 'Read Mode', analyzeBtn: 'Analyze Paragraph', readerPlaceholder: 'Click any word to define.', mapPlaceholderText: 'Search for a word to generate its concept map.', chatIntro: "Hi! I'm Andy. Ask me anything about words, idioms, or languages!", loading: 'Loading...', chatPlaceholder: 'Ask Andy...', readerPlaceholder: 'Paste text here...', dictionary: 'Dictionary', title: 'सनातन संग्रहालय' };
+    const defaults = { search: 'Search', reader: 'Reader', map: 'Map', chat: 'Andy', saved: 'Saved', wotd: 'Daily Word', exploreTitle: 'Explore the <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Universe</span> of Words', savedWordsTitle: 'Saved Words', readerInputTitle: 'Reader Input', readerModeBtn: 'Read Mode', analyzeBtn: 'Analyze Paragraph', readerPlaceholder: 'Click any word to define.', mapPlaceholderText: 'Search for a word to generate its concept map.', chatIntro: "Hi! I'm Andy. Ask me anything about words, idioms, or languages!", loading: 'Loading...', chatPlaceholder: 'Ask Andy...', readerPlaceholder: 'Paste text here...', dictionary: 'Dictionary', title: 'Sanatan Sangrahalaya' };
     const d = (langCode === 'en' || !uiData) ? defaults : uiData;
 
     const icons = { search: 'search', reader: 'book-open', map: 'network', chat: 'message-square', saved: 'wifi-off', wotd: 'calendar' };
@@ -106,7 +106,7 @@ function translateUI(langCode) {
 
     const navTitle = querySel('nav h1');
     if(navTitle) {
-        navTitle.innerHTML = `<span class="text-orange-600">सनातन संग्रहालय</span>`;
+        navTitle.innerHTML = `<span class="text-orange-600">Sanatan Sangrahalaya</span>`;
     }
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -190,7 +190,8 @@ async function handleSearch() {
             currentResults = [offline]; activeResultIndex = 0; addToRecent(offline.word);
             getEl('search-results').innerHTML = localizeHtml(offline.html || "<p>Offline view.</p>", lang);
         } else {
-            const data = await apiCall('/api/dictionary', { term: inp, language: lang, theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' });
+            // UPDATED ENDPOINT HERE: /api/dictionary -> /api/search
+            const data = await apiCall('/api/search', { term: inp, language: lang, theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' });
             currentResults = data.results; activeResultIndex = 0;
             const tabs = getEl('tabs-container');
             if (currentResults.length > 1) {
