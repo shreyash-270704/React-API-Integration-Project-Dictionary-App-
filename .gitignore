@@ -1,27 +1,18 @@
-Environment Variables
+Sensitive Info
 
 .env
 
-Python
+Python Bytecode
 
 pycache/
 *.pyc
-*.pyo
-.pyd
-.Python
-env/
+
+Virtual Environment
+
 venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git
-.mypy_cache
-.pytest_cache
-.hypothesis/
+env/
+
+Editor/IDE files (Optional but good)
+
+.vscode/
+.idea/
